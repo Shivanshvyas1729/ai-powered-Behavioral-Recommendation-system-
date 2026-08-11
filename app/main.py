@@ -21,7 +21,8 @@ from app.logger import logger
 from app.database import (
     init_db, get_user_by_email, get_user_by_id, create_user, hash_password,
     get_all_products, get_product_by_id, insert_product, update_product_db, delete_product_db,
-    record_events_batch, get_all_live_events_stream, clear_all_behavioral_events
+    record_events_batch, get_all_live_events_stream, clear_all_behavioral_events,
+    get_project_curriculum_modules, get_allowed_trigger_events, set_allowed_trigger_events
 )
 from app.vector_store import VectorStoreManager, CHROMA_AVAILABLE, chroma_collection
 from app.agent import SmartRecoAgent, TRACE_LOGS, TRACES_LOCK
