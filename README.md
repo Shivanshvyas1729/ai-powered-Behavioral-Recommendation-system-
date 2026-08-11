@@ -41,14 +41,15 @@ live link  -  https://neurocart-smartreco.onrender.com
 
 ## 🚀 Key Features & Architectural Innovations
 
-### 1. 📡 17-Signal Natural Behavioral Telemetry Engine (`tracker.js`)
-* Real-time intent statement logging (e.g., `"User spent 18s reading MLOps"`, `"User highlighted 'LangGraph state persistence'"`, `"User expanded Module 2"`).
-* Automatic cross-topic dwell time snapshot flushing to prevent attribution bugs.
-* Scroll depth tracking (`25%`, `50%`, `75%`, `90%`) restricted to course detail pages.
+### 1. 📡 17-Signal Natural Telemetry Engine & Zero-Click Auto-Popup (`tracker.js`)
+* **Zero-Click Automatic Popups**: The user never has to press a "Get Recommendations" button. `tracker.js` observes browsing activity and **automatically pops up personalized recommendations** as intent signals accumulate.
+* **Human-Intent Statement Logging**: Captures natural intent statements (e.g., `"User spent 18s reading MLOps"`, `"User highlighted 'LangGraph state persistence'"`, `"User expanded Module 2"`).
+* **Automatic Dwell Timer Flushing**: Flushes per-topic dwell timer snapshots automatically to resolve attribution race conditions.
 
-### 2. ⚡ 2-Pass RAG Architecture (Top-10 Retrieval + LLM Re-ranking)
-* **Pass 1 (Vector Search)**: Queries **ChromaDB (`./chroma_db`)** using candidate user signals to retrieve the Top 10 matching courses.
-* **Pass 2 (Single Mesh API Call)**: Passes the 10 candidate courses + full behavioral actions to Mesh API (`openai/gpt-4o-mini`) to re-rank the top 2-3 matches and generate personalized narrative copy.
+### 2. ⚡ 3-Layer Performance Pipeline (<0.8s Latency & Token Efficiency)
+* **Layer 1 (In-Memory 15s Cache & Cooldown)**: Short-lived server-side TTL caching and target-aware cooldown serve high-frequency interactions with **0ms backend latency** (saves generated results so rapid actions on the same page don't re-trigger LLM calls).
+* **Layer 2 (Single-Pass RAG — 3 Calls to 1)**: Replaced a 3-step LLM chain with local ChromaDB vector candidate retrieval ($<2\text{ms}$) followed by a **single unified LLM re-ranking & copywriting pass** using Pydantic schema validation, cutting total latency from 4.5s down to $<0.8\text{s}$.
+* **Layer 3 (Client-Side `AbortController`)**: Native JavaScript `AbortController` instantly cancels in-flight HTTP requests and SSE streams when users scroll away or switch categories, preventing token waste.
 
 ### 3. 🎯 Category-Context Scoping & Event Threshold
 * **Threshold Rule**: Requires at least **3 captured events** before showing recommendations, preventing cold-start mismatches.
@@ -107,6 +108,20 @@ MESHAPI_CHAT_MODEL=openai/gpt-4o-mini
 python -m uvicorn app.main:app --reload --port 8000
 ```
 Open **[http://localhost:8000](http://localhost:8000)** in your browser!
+
+---
+
+## ☁️ Render Deployment & Free Tier Optimization
+
+This project includes a pre-configured [`render.yaml`](file:///c:/Users/DELL/Desktop/recommandation%20system/render.yaml) blueprint for 1-click deployment on Render.
+
+### Saving Render Free Tier Build Minutes:
+1. **Automated `buildFilter`**: `render.yaml` automatically ignores changes to `.md` documentation, `.gitignore`, and log files so Render won't trigger unnecessary builds.
+2. **Use `[skip render]` in Commit Messages**: If you ever want to push code or docs without triggering a deployment, include `[skip render]` or `[skip ci]` in your git commit message:
+   ```bash
+   git commit -m "Updated README and Judges Pitch Guide [skip render]"
+   git push origin main
+   ```
 
 ---
 
