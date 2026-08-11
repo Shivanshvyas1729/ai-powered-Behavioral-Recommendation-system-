@@ -93,9 +93,15 @@ class SmartRecoAgent:
         # --- Threshold checks for active recommendations ---
         active_category = category_context if (category_context and category_context != "All") else None
 
+        # Filter out generic main catalog/page visits to require true user intent signals
+        meaningful_events = [
+            e for e in recent_events
+            if not any(k in (e.get("target_id", "") or "").lower() for k in ["main course catalog", "peek inside the engine", "course catalog"])
+        ]
+
         if active_category:
             scoped_products = [p for p in all_products if p["category"].lower() == active_category.lower()]
-            if not force_refresh and len(recent_events) < 1:
+            if not force_refresh and len(meaningful_events) < 1:
                 return {
                     "active": False,
                     "narrative": f"Explore {active_category} courses to get personalized AI recommendations.",
@@ -103,10 +109,10 @@ class SmartRecoAgent:
                     "recommended_products": []
                 }
         else:
-            if not force_refresh and len(recent_events) < 1:
+            if not force_refresh and len(meaningful_events) < 1:
                 return {
                     "active": False,
-                    "narrative": "Keep exploring products to enable live AI agent recommendations.",
+                    "narrative": "Keep exploring specific products or categories to enable live AI agent recommendations.",
                     "signal_pills": [],
                     "recommended_products": []
                 }
