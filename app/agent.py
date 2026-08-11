@@ -118,6 +118,15 @@ class SmartRecoAgent:
                 }
             scoped_products = all_products
 
+        # Determine primary trigger action
+        if recent_events:
+            last_ev = recent_events[0]
+            ev_type = last_ev.get("event_type", "Intent")
+            ev_target = last_ev.get("target_id", "Catalog Exploration")
+            trigger_action = f"{ev_type}: {ev_target}"
+        else:
+            trigger_action = "Manual Intent Refresh"
+
         product_map = {p["id"]: p["title"] for p in all_products}
         signal_pills = self.extract_signal_pills(recent_events, product_map)
 
@@ -126,8 +135,17 @@ class SmartRecoAgent:
         trace = ExecutionTrace(
             trace_id=str(uuid.uuid4()),
             user_id=self.user_id,
-            timestamp=time.time()
+            timestamp=time.time(),
+            trigger_action=trigger_action
         )
+
+        # Write to temporary log file agent_triggers.log
+        try:
+            with open("agent_triggers.log", "a", encoding="utf-8") as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] User #{self.user_id} | Trigger: {trigger_action} | Trace: {trace.trace_id}\n")
+        except Exception:
+            pass
+
         t0_total = time.perf_counter()
         
         try:

@@ -5,6 +5,7 @@ class ExecutionTrace(BaseModel):
     trace_id: str = Field(..., description="Unique timestamp-based trace ID")
     user_id: int = Field(..., description="User ID who triggered the recommendation")
     timestamp: float = Field(..., description="Unix timestamp when trace started")
+    trigger_action: str = Field("Behavioral intent threshold reached", description="The specific user action or signal that triggered this LLM call")
     
     t_total_ms: float = Field(0.0, description="Total execution time in milliseconds")
     t_vector_ms: float = Field(0.0, description="Vector DB retrieval time in milliseconds")
