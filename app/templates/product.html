@@ -419,62 +419,41 @@
         <!-- What You Will Learn -->
         <h3 class="section-title">📙 What You Will Learn</h3>
         <div class="learn-grid">
-          {% if product.what_you_will_learn %}
-            {% for item in product.what_you_will_learn.split('\n') %}
-              {% if item.strip() %}
-              <div class="learn-item">
-                <span class="check-icon">✓</span>
-                <span>{{ item.strip() }}</span>
-              </div>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            <div class="learn-item"><span class="check-icon">✓</span><span>How real AI governance controls work in practice</span></div>
-            <div class="learn-item"><span class="check-icon">✓</span><span>How a multi-agent system (LangGraph) enforces policy</span></div>
-            <div class="learn-item"><span class="check-icon">✓</span><span>Identity Governance for Humans and AI Agents</span></div>
-            <div class="learn-item"><span class="check-icon">✓</span><span>Model, Data & Policy Governance operational layers</span></div>
-          {% endif %}
+          {% for item in product.what_you_will_learn.split(',') %}
+            {% if item.strip() %}
+            <div class="learn-item">
+              <span class="check-icon">✓</span>
+              <span>{{ item.strip() }}</span>
+            </div>
+            {% endif %}
+          {% endfor %}
         </div>
 
         <!-- Architecture Banner -->
         <div class="arch-banner-box">
-          <div style="font-size: 0.8rem; color: #38bdf8; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.4rem;">SYSTEM ARCHITECTURE</div>
-          <div class="arch-diagram-title">{{ product.title }} Architecture</div>
+          <div style="font-size: 0.8rem; color: #38bdf8; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.4rem;">TECH STACK & ARCHITECTURE</div>
+          <div class="arch-diagram-title">{{ product.title }}</div>
           <div style="display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;">
-            <span style="background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.78rem;">Data Governance</span>
-            <span style="background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.78rem;">Policy Engine (OPA)</span>
-            <span style="background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.78rem;">Model Registry</span>
-            <span style="background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.78rem;">Tracing (Langfuse)</span>
+            {% for tech in product.technologies.split(',') %}
+              {% if tech.strip() %}
+              <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #7dd3fc; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">{{ tech.strip() }}</span>
+              {% endif %}
+            {% endfor %}
           </div>
-          <div class="arch-subtext">High-level architecture overview of the {{ product.title }}.</div>
+          <div class="arch-subtext">Production tech stack utilized in {{ product.title }}.</div>
         </div>
 
         <!-- What You'll Build -->
-        <h3 class="section-title" style="margin-top: 2rem;">💻 What You'll Build</h3>
+        <h3 class="section-title" style="margin-top: 2rem;">💻 Capstone Project Deliverable</h3>
         <div class="build-card">
-          {% if product.what_you_will_build %}
-            {% for item in product.what_you_will_build.split('\n') %}
-              {% if item.strip() %}
-              <div class="build-item">
-                <span class="orange-bullet"></span>
-                <span>{{ item.strip() }}</span>
-              </div>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            <div class="build-item">
-              <span class="orange-bullet"></span>
-              <span>A working multi-agent AI system (order/billing/admin specialists) backed by a real database with least-privilege roles, orchestrated as an explicit LangGraph state graph.</span>
-            </div>
-            <div class="build-item">
-              <span class="orange-bullet"></span>
-              <span>A full governance stack — Keycloak/SPIFFE identity, OPA policy engine, OpenMetadata data catalog, MLflow model registry, Guardrails AI, and Langfuse tracing.</span>
-            </div>
-            <div class="build-item">
-              <span class="orange-bullet"></span>
-              <span>A live Streamlit dashboard showing all governance checks pass/fail per request, plus a compliance report generator that reads real logs to prove enforcement.</span>
-            </div>
-          {% endif %}
+          <div class="build-item">
+            <span class="orange-bullet"></span>
+            <span><strong>Real-World Project:</strong> {{ product.what_you_will_build }}</span>
+          </div>
+          <div class="build-item">
+            <span class="orange-bullet"></span>
+            <span><strong>Target Audience & Skill Level:</strong> Recommended for {{ product.level }} engineers aiming to master {{ product.category }}.</span>
+          </div>
         </div>
 
         <!-- Project Instructor -->
@@ -495,11 +474,24 @@
 
       <!-- TAB 2: PREREQUISITES -->
       <div id="prereq-tab" class="tab-content" style="display: none;">
-        <h3 class="section-title">📋 Prerequisites</h3>
+        <h3 class="section-title">📋 Prerequisites & Target Audience</h3>
         <div class="build-card">
-          <div class="build-item"><span class="orange-bullet"></span><span>Basic understanding of Python, REST APIs, and Docker containerization.</span></div>
-          <div class="build-item"><span class="orange-bullet"></span><span>Familiarity with LLMs and prompt engineering fundamentals.</span></div>
-          <div class="build-item"><span class="orange-bullet"></span><span>No prior governance experience required — everything is built step-by-step.</span></div>
+          <div class="build-item">
+            <span class="orange-bullet"></span>
+            <span><strong>Course Difficulty Level:</strong> {{ product.level or 'INTERMEDIATE' }} level training.</span>
+          </div>
+          <div class="build-item">
+            <span class="orange-bullet"></span>
+            <span><strong>Core Skills & Tech Stack:</strong> Hands-on experience or familiarity with {{ product.technologies or 'Python, REST APIs & AI fundamentals' }}.</span>
+          </div>
+          <div class="build-item">
+            <span class="orange-bullet"></span>
+            <span><strong>System Requirements:</strong> Standard computer setup with Docker, Python 3.10+, and internet access for API keys.</span>
+          </div>
+          <div class="build-item">
+            <span class="orange-bullet"></span>
+            <span><strong>No Advanced Background Needed:</strong> Step-by-step guidance provided from foundational setup to production-grade architecture.</span>
+          </div>
         </div>
       </div>
 
