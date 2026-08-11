@@ -30,47 +30,39 @@
     </div>
 </div>
 
-<!-- Recommended For You Section -->
-<div class="signal-widget" id="signal-widget-root" style="display:none; margin-bottom:2.5rem; opacity:0; transform:translateY(-10px); transition:opacity 0.4s ease, transform 0.4s ease;">
+<!-- Recommended For You Section (Compact, Sleek & Centered) -->
+<div class="signal-widget" id="signal-widget-root" style="display:none; margin-bottom:2rem; opacity:0; transform:translateY(-8px); transition:opacity 0.3s ease, transform 0.3s ease; background:rgba(18,22,38,0.95); border:1px solid rgba(139,92,246,0.25); border-radius:12px; backdrop-filter:blur(16px); padding:0.9rem 1.1rem; box-shadow:0 8px 30px rgba(0,0,0,0.4);">
 
     <!-- Header Bar -->
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; padding:1.1rem 1.4rem 0;">
-        <div style="display:flex; align-items:center; gap:0.7rem;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; padding:0.2rem 0.4rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
             <div id="ai-badge-pulse" style="position:relative; display:flex; align-items:center; justify-content:center;">
-                <span style="font-size:1.4rem; line-height:1;">✨</span>
-                <span style="position:absolute; top:-3px; right:-3px; width:8px; height:8px; background:#a78bfa; border-radius:50%; border:2px solid #0b0f19; animation:pulseDot 2s infinite;"></span>
+                <span style="font-size:1.1rem; line-height:1;">✨</span>
+                <span style="position:absolute; top:-2px; right:-2px; width:6px; height:6px; background:#a78bfa; border-radius:50%; border:2px solid #0b0f19; animation:pulseDot 2s infinite;"></span>
             </div>
             <div>
-                <h3 style="color:#fff; font-size:1.1rem; font-family:var(--font-heading); margin:0; letter-spacing:-0.01em;">Recommended For You</h3>
-                <p style="color:#7c85a2; font-size:0.75rem; margin:0; margin-top:1px;">Personalized by NeuroCart AI based on your session</p>
+                <h3 style="color:#fff; font-size:0.95rem; font-family:var(--font-heading); margin:0; letter-spacing:-0.01em; font-weight:700;">Recommended For You</h3>
+                <p style="color:#7c85a2; font-size:0.72rem; margin:0;">Personalized by NeuroCart AI based on your active session</p>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.3); border-radius:20px; padding:0.3rem 0.75rem; font-size:0.72rem; color:#a78bfa; font-weight:600; letter-spacing:0.04em;">
-            <span style="width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pulseDot 1.5s infinite;"></span>
+        <div style="display:flex; align-items:center; gap:0.35rem; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.3); border-radius:16px; padding:0.2rem 0.6rem; font-size:0.68rem; color:#a78bfa; font-weight:600; letter-spacing:0.04em;">
+            <span style="width:5px;height:5px;border-radius:50%;background:#a78bfa;animation:pulseDot 1.5s infinite;"></span>
             LIVE AI
         </div>
     </div>
 
     <!-- Narrative / Typewriter Row -->
-    <div id="live-agent-recommendation-text" style="margin:0 1.4rem 1.25rem; padding:0.9rem 1.1rem; background:rgba(139,92,246,0.07); border-left:3px solid #7c3aed; border-radius:0 8px 8px 0; position:relative;">
-        <span id="home-typewriter-text" style="color:#d1d5db; font-size:0.92rem; font-style:italic; line-height:1.6;"></span>
+    <div id="live-agent-recommendation-text" style="margin:0 0.4rem 0.85rem; padding:0.6rem 0.85rem; background:rgba(139,92,246,0.08); border-left:3px solid #8b5cf6; border-radius:4px; position:relative; max-height:100px; overflow-y:auto;">
+        <span id="home-typewriter-text" style="color:#e2e8f0; font-size:0.84rem; font-style:normal; line-height:1.5;"></span>
     </div>
 
-    <!-- Separator -->
-    <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent); margin:0 1.4rem 1.25rem;"></div>
-
-    <!-- Recommended Cards Grid -->
-    <div id="home-recommended-grid" class="product-grid" style="padding:0 1.4rem 1.4rem;">
+    <!-- Recommended Cards Grid (Sleek Compact Cards) -->
+    <div id="home-recommended-grid" class="product-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0.85rem; padding:0.2rem 0.4rem 0.4rem;">
         <!-- Dynamically populated via JS fetch to /api/agent/live-signal -->
     </div>
 </div>
 
 <style>
-@media (min-width: 1200px) {
-    #signal-widget-root {
-        margin-right: 340px !important;
-    }
-}
 @keyframes pulseDot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(0.7); }
@@ -127,39 +119,24 @@ let recommendationObserver = null;
 let currentActiveCategory = 'All';
 
 function showSkeletonLoader() {
-    const widgetEl = document.querySelector('#signal-widget-root');
     const textEl   = document.querySelector('#home-typewriter-text');
     const gridEl   = document.querySelector('#home-recommended-grid');
-    if (!widgetEl) return;
-
-    // Show widget immediately
-    widgetEl.style.display = 'block';
-    void widgetEl.offsetWidth;
-    widgetEl.style.opacity = '1';
-    widgetEl.style.transform = 'translateY(0)';
 
     // Thinking dots in the narrative area
     if (textEl) {
-        textEl.innerHTML = `<span style="color:#a78bfa;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:6px;">🤖 AI is analyzing your interests<span class="thinking-dot" style="animation-delay:0s"></span><span class="thinking-dot" style="animation-delay:0.2s"></span><span class="thinking-dot" style="animation-delay:0.4s"></span></span>`;
+        textEl.innerHTML = `<span style="color:#a78bfa;font-size:0.82rem;font-weight:500;display:flex;align-items:center;gap:6px;">🤖 AI is analyzing your active session...</span>`;
     }
 
-    // Skeleton placeholder cards
+    // Compact Skeleton placeholder cards
     if (gridEl) {
         gridEl.innerHTML = '';
         for (let i = 0; i < 2; i++) {
             gridEl.innerHTML += `
-            <div class="course-card" style="border:1px solid rgba(139,92,246,0.2);">
-                <div class="course-card-banner skeleton-block" style="height:130px;"></div>
-                <div class="course-card-body">
-                    <div class="skeleton-block" style="height:14px;width:60%;margin-bottom:10px;"></div>
-                    <div class="skeleton-block" style="height:22px;width:85%;margin-bottom:8px;"></div>
-                    <div class="skeleton-block" style="height:22px;width:70%;margin-bottom:16px;"></div>
-                    <div class="skeleton-block" style="height:60px;border-radius:8px;margin-bottom:16px;"></div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div class="skeleton-block" style="height:24px;width:60px;"></div>
-                        <div class="skeleton-block" style="height:36px;width:110px;border-radius:8px;"></div>
-                    </div>
-                </div>
+            <div class="course-card" style="border:1px solid rgba(139,92,246,0.2); padding:0.8rem;">
+                <div class="skeleton-block" style="height:50px; border-radius:6px; margin-bottom:8px;"></div>
+                <div class="skeleton-block" style="height:14px; width:70%; margin-bottom:6px;"></div>
+                <div class="skeleton-block" style="height:12px; width:90%; margin-bottom:10px;"></div>
+                <div class="skeleton-block" style="height:28px; border-radius:6px;"></div>
             </div>`;
         }
     }
@@ -172,7 +149,7 @@ function loadCategoryRecommendation(categoryName = 'All') {
 
     currentAbortController = new AbortController();
 
-    // Show skeleton immediately — user sees activity from 0ms
+    // Prepare skeleton structure silently (widget stays hidden until data returns)
     showSkeletonLoader();
 
     const catParam = categoryName && categoryName !== 'All'
@@ -193,18 +170,27 @@ function loadCategoryRecommendation(categoryName = 'All') {
         try { msg = JSON.parse(e.data); } catch { return; }
 
         if (msg.inactive) {
-            // Not enough signals yet — hide widget
+            // Not enough signals yet — keep widget hidden
             source.close(); currentEventSource = null;
-            if (widgetEl) { widgetEl.style.opacity='0'; widgetEl.style.transform='translateY(-10px)'; setTimeout(()=>widgetEl.style.display='none', 400); }
+            if (widgetEl) { widgetEl.style.opacity='0'; widgetEl.style.transform='translateY(-8px)'; setTimeout(()=>widgetEl.style.display='none', 300); }
             return;
         }
         if (msg.done) {
             source.close(); currentEventSource = null;
             return;
         }
-        if (msg.token && textEl) {
-            narrativeText += msg.token;
-            textEl.innerText = narrativeText;   // raw prose, no quotes
+        if (msg.token) {
+            // Reveal widget smoothly on first valid narrative token!
+            if (widgetEl && widgetEl.style.display !== 'block') {
+                widgetEl.style.display = 'block';
+                void widgetEl.offsetWidth;
+                widgetEl.style.opacity = '1';
+                widgetEl.style.transform = 'translateY(0)';
+            }
+            if (textEl) {
+                narrativeText += msg.token;
+                textEl.innerText = narrativeText;   // raw prose
+            }
         }
     };
     source.onerror = () => { source.close(); currentEventSource = null; };
@@ -217,15 +203,19 @@ function loadCategoryRecommendation(categoryName = 'All') {
     .then(res => res.json())
     .then(data => {
         if (!data || !data.active) {
-            // Not enough signals — close stream too, hide widget
+            // Not enough signals — hide widget
             if (currentEventSource) { currentEventSource.close(); currentEventSource = null; }
-            if (widgetEl) { widgetEl.style.opacity='0'; widgetEl.style.transform='translateY(-10px)'; setTimeout(()=>widgetEl.style.display='none', 400); }
+            if (widgetEl) { widgetEl.style.opacity='0'; widgetEl.style.transform='translateY(-8px)'; setTimeout(()=>widgetEl.style.display='none', 300); }
             return;
         }
 
-        // Widget stays visible (already shown by skeleton)
+        // Widget stays visible
         if (widgetEl) {
             widgetEl.style.display  = 'block';
+            void widgetEl.offsetWidth;
+            widgetEl.style.opacity  = '1';
+            widgetEl.style.transform = 'translateY(0)';
+        }
             void widgetEl.offsetWidth;
             widgetEl.style.opacity  = '1';
             widgetEl.style.transform = 'translateY(0)';
@@ -334,10 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Apply initial filter state if category URL param is present
     if (currentActiveCategory !== 'All') {
         applyCategoryFilterUI(currentActiveCategory);
+        loadCategoryRecommendation(currentActiveCategory);
     }
-
-    // Fetch AI recommendation immediately on load for overall session
-    loadCategoryRecommendation('All');
 
     document.querySelectorAll('.category-pill').forEach(pill => {
         pill.addEventListener('click', (e) => {
