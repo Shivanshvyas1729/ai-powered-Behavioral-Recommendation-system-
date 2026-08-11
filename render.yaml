@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: neurocart-smartreco
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MESH_API_KEY
+        sync: false          # Set manually in Render dashboard
+      - key: MESHAPI_BASE_URL
+        value: https://api.meshapi.ai/v1
+      - key: MESHAPI_CHAT_MODEL
+        value: openai/gpt-4o-mini
+      - key: MESH_EMBEDDING_MODEL
+        value: openai/text-embedding-3-small
+      - key: SQLITE_DB_PATH
+        value: /data/smartreco.db
+      - key: CHROMA_DB_DIR
+        value: /data/chroma_db
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    disk:
+      name: neurocart-data
+      mountPath: /data
+      sizeGB: 1              # Free tier allows 1GB persistent disk

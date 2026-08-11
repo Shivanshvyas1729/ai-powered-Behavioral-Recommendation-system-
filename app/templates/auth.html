@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'login' %}Login{% else %}Register{% endif %} — SmartReco{% endblock %}
+{% block target_id %}page_auth{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <h2 style="color: #fff; margin-bottom: 0.5rem; text-align: center;">
+        {% if mode == 'login' %}🔐 Platform Login{% else %}📝 Create Account{% endif %}
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 1.5rem;">
+        {% if mode == 'login' %}Sign in to activate your behavioral AI agent session.{% else %}Join SmartReco to receive personalized AI recommendations.{% endif %}
+    </p>
+
+    {% if error %}
+        <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.9rem; margin-bottom: 1.25rem;">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form action="{% if mode == 'login' %}/login{% else %}/register{% endif %}" method="POST">
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" name="email" class="form-control" placeholder="user@smartreco.ai" required>
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        {% if mode == 'register' %}
+        <div class="form-group">
+            <label>Account Role</label>
+            <select name="role" class="form-control">
+                <option value="user">Regular User (Browse & Recommendations)</option>
+                <option value="admin">Admin (Manage Catalog & Dual-Write)</option>
+            </select>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+            {% if mode == 'login' %}Sign In &rarr;{% else %}Create Account &rarr;{% endif %}
+        </button>
+    </form>
+
+    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+        {% if mode == 'login' %}
+            Don't have an account? <a href="/register" style="color: var(--primary);">Register here</a>
+            <div style="margin-top: 0.75rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 6px;">
+                💡 Quick Login: <code>user@smartreco.ai</code> / <code>user123</code><br>
+                ⚙️ Admin Login: <code>admin@smartreco.ai</code> / <code>admin123</code>
+            </div>
+        {% else %}
+            Already registered? <a href="/login" style="color: var(--primary);">Sign in here</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

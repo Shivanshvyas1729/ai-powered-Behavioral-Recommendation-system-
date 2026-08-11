@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NeuroCart / SmartReco — The Cart That Thinks{% endblock %}</title>
+    <meta name="description" content="Behavioral AI recommendation agent powered by real-time tracking and Mesh API gateway.">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-target-id="{% block target_id %}page_root{% endblock %}" data-user-id="{% if user %}{{ user.id }}{% endif %}">
+
+    <!-- Header Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="brand-logo">
+                <div class="brand-icon">⚡</div>
+                <span>NeuroCart</span>
+            </a>
+
+            <div class="nav-center-search">
+                <span class="nav-search-icon">🔍</span>
+                <input type="text" id="catalog-search-input" class="nav-search-input" placeholder="Search courses, topics, tools...">
+            </div>
+
+            <div class="nav-right-actions" style="position: relative; z-index: 100005; display: flex; align-items: center; gap: 0.6rem;">
+                <a href="https://developers.meshapi.ai/docs" target="_blank" class="mesh-console-btn" style="color: #a78bfa; background: rgba(30, 34, 56, 0.8); border: 1px solid rgba(139, 92, 246, 0.3); padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                    ⚡ MeshAPI Console
+                </a>
+
+                {% if user %}
+                    {% if user.role == 'admin' %}
+                        <a href="/admin" class="nav-btn-link" style="color: #f8fafc; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.45rem 0.85rem; border-radius: 999px; font-weight: 600; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer;">⚙️ Admin</a>
+                    {% endif %}
+                    <a href="/engine" class="nav-btn-link" style="color: #f8fafc; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.45rem 0.85rem; border-radius: 999px; font-weight: 600; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer;">🔍 Engine</a>
+                    <button onclick="openDiagnosticsModal()" class="nav-btn-link" style="position:relative; color: #a78bfa; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(139, 92, 246, 0.4); padding: 0.45rem 0.85rem; border-radius: 999px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        ⚡ Agent Diagnostics
+                        <span id="nav-diag-error-dot" style="display:none; position:absolute; top:-3px; right:-3px; width:10px; height:10px; background:#ef4444; border-radius:50%; border:2px solid #0b0f19;"></span>
+                    </button>
+                    <a href="/logout" class="nav-btn-link" style="color: #f8fafc; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.45rem 0.85rem; border-radius: 999px; font-weight: 600; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer;">Logout</a>
+                {% else %}
+                    <a href="/login" class="nav-btn-link" style="color: #ffffff; background: var(--gradient-purple); padding: 0.45rem 1.2rem; border-radius: 999px; font-weight: 600; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; cursor: pointer;">Sign in</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Category Filter Bar (Rendered on catalog page only) -->
+    {% block category_bar %}{% endblock %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Floating & Draggable Live Signal Tracker Widget (Persists Everywhere) -->
+    <div id="floating-signal-tracker" style="position: fixed; top: 90px; right: 25px; z-index: 9999; width: 320px; background: rgba(18, 20, 32, 0.95); backdrop-filter: blur(16px); border: 1px solid var(--border-accent); border-radius: 12px; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5); overflow: hidden; transition: box-shadow 0.2s;">
+        <!-- Drag Handle Header -->
+        <div id="floating-tracker-drag-handle" style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.9rem; background: linear-gradient(90deg, rgba(124, 58, 237, 0.3), rgba(99, 102, 241, 0.3)); border-bottom: 1px solid var(--border-color); cursor: move; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="font-size: 0.9rem;">🖐️</span>
+                <span style="font-size: 0.82rem; font-weight: 700; color: #fff; font-family: var(--font-heading);">⚡ Live Signal Tracker</span>
+                <span class="streaming-dot" style="margin-left: 0.2rem;"><span class="pulse-green"></span></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <button onclick="clearSignalHistory()" style="background: rgba(255,255,255,0.08); border: none; color: #94a3b8; font-size: 0.72rem; cursor: pointer; padding: 0.15rem 0.4rem; border-radius: 4px;" title="Clear Signal History">
+                    🗑️ Reset
+                </button>
+                <button onclick="toggleFloatingTrackerBody()" style="background: none; border: none; color: #9ca3af; font-size: 0.85rem; cursor: pointer; padding: 0 0.2rem;" title="Minimize / Expand">
+                    ➖
+                </button>
+            </div>
+        </div>
+        <!-- Scrollable Vertical Event Signal Container -->
+        <div id="floating-tracker-body" style="padding: 0.6rem; max-height: 250px; overflow-y: auto;">
+            <div id="live-signal-pills" style="display: flex; flex-direction: column;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0.6rem;background:rgba(30,41,59,0.5);border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-size:0.78rem;color:#94a3b8;">
+                    <span><strong style="color:#a78bfa">⚡ Active</strong> · Session Started</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.SMARTRECO_USER_ID = document.body.getAttribute('data-user-id') ? parseInt(document.body.getAttribute('data-user-id')) : null;
+        function toggleFloatingTrackerBody() {
+            const body = document.getElementById('floating-tracker-body');
+            if (body) {
+                body.style.display = body.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+    </script>
+    <script src="/static/js/tracker.js"></script>
+    
+    <!-- Agent Flow Diagnostics Modal -->
+    <div id="diagnostics-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100010; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div style="background:#0b0f19; border:1px solid #7c3aed; border-radius:12px; width:90%; max-width:800px; max-height:85vh; overflow-y:auto; padding:2rem; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+            <button onclick="document.getElementById('diagnostics-modal').style.display='none'" style="position:absolute; top:1rem; right:1.5rem; background:transparent; border:none; color:#a78bfa; font-size:1.5rem; cursor:pointer;">&times;</button>
+            <h2 style="color:#fff; font-family:var(--font-heading); margin-top:0;">⚡ Agent Flow Diagnostics</h2>
+            <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:1.5rem;">Live execution traces of the AI Agent's recommendation pipeline. (Auto-refreshes)</p>
+            
+            <div id="diagnostics-content" style="display:flex; flex-direction:column; gap:1rem;">
+                <div style="color:#a78bfa;">Loading traces...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let diagInterval = null;
+    function openDiagnosticsModal() {
+        document.getElementById('diagnostics-modal').style.display = 'flex';
+        fetchDiagnostics();
+        if(!diagInterval) {
+            diagInterval = setInterval(fetchDiagnostics, 2000);
+        }
+    }
+    
+    document.getElementById('diagnostics-modal').addEventListener('click', function(e) {
+        if(e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+
+    function fetchDiagnostics() {
+        fetch('/api/agent/traces')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('diagnostics-content');
+                const dot = document.getElementById('nav-diag-error-dot');
+                
+                if (!data.traces || data.traces.length === 0) {
+                    if (document.getElementById('diagnostics-modal').style.display !== 'none') {
+                        container.innerHTML = '<div style="color:#64748b; padding:2rem; text-align:center;">No traces recorded yet. Trigger AI recommendations!</div>';
+                    }
+                    if(dot) dot.style.display = 'none';
+                    return;
+                }
+                
+                const hasError = data.traces.some(t => !t.success);
+                if(dot) dot.style.display = hasError ? 'block' : 'none';
+                
+                if (document.getElementById('diagnostics-modal').style.display === 'none') {
+                    return;
+                }
+                
+                container.innerHTML = data.traces.map((trace, idx) => `
+                    <div style="background:rgba(30,41,59,0.5); border:1px solid ${trace.success ? 'rgba(255,255,255,0.08)' : '#ef4444'}; border-radius:8px; padding:1.2rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                            <strong style="color:#fff; font-size:1.05rem;">Trace ${trace.trace_id.split('-')[0]}...</strong>
+                            <span style="font-size:0.8rem; color:#94a3b8;">${new Date(trace.timestamp * 1000).toLocaleTimeString()}</span>
+                        </div>
+                        
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.85rem;">
+                            <div>
+                                <div style="color:#94a3b8; margin-bottom:4px;">Status</div>
+                                <div style="color:${trace.success ? '#34d399' : '#f87171'}; font-weight:bold;">${trace.success ? '✅ Success' : '❌ Failed'}</div>
+                            </div>
+                            <div>
+                                <div style="color:#94a3b8; margin-bottom:4px;">Total Pipeline Latency</div>
+                                <div style="color:#e2e8f0; font-family:monospace; font-size:1.1rem;">${Math.round(trace.t_total_ms)} ms</div>
+                            </div>
+                            <div>
+                                <div style="color:#94a3b8; margin-bottom:4px;">Vector Search (ChromaDB)</div>
+                                <div style="color:#e2e8f0; font-family:monospace;">${Math.round(trace.t_vector_ms)} ms <span style="color:#64748b;">(${trace.candidates_found} retrieved)</span></div>
+                            </div>
+                            <div>
+                                <div style="color:#94a3b8; margin-bottom:4px;">Mesh API LLM Generation</div>
+                                <div style="color:#e2e8f0; font-family:monospace;">${Math.round(trace.t_llm_ms)} ms</div>
+                            </div>
+                        </div>
+                        
+                        ${!trace.success ? `
+                        <div style="margin-top:1rem; padding:0.8rem; background:rgba(239,68,68,0.1); border-left:3px solid #ef4444; color:#fca5a5; font-size:0.85rem; font-family:monospace; overflow-x:auto;">
+                            ${trace.error_vector_db ? `<div><strong>Vector DB Error:</strong> ${trace.error_vector_db}</div>` : ''}
+                            ${trace.error_llm ? `<div><strong>LLM Error:</strong> ${trace.error_llm}</div>` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            })
+            .catch(err => console.error("Error fetching diagnostics:", err));
+    }
+    
+    // Background polling for red dot
+    setInterval(() => {
+        if (document.getElementById('diagnostics-modal').style.display === 'none') {
+            fetchDiagnostics(); // updates the red dot even when closed
+        }
+    }, 5000);
+    
+    // Initial fetch for red dot
+    fetchDiagnostics();
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

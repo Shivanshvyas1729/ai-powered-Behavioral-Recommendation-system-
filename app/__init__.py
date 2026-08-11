@@ -1,0 +1,1 @@
+# SmartReco package initialization

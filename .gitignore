@@ -1,0 +1,32 @@
+# Environment variables (NEVER commit these)
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# SQLite & Local Stores (generated at runtime, stored on persistent disk in prod)
+*.db
+*.sqlite3
+chroma_db/
+data/
+
+# Logs
+*.log
+smartreco.log
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
