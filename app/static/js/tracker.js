@@ -192,11 +192,17 @@
             });
         });
 
-        // 2. Buttons & Course Card Click Listener
-        document.querySelectorAll('[data-track-click], .btn, .btn-start-project').forEach(el => {
-            el.addEventListener('click', () => {
+        // 2. Buttons & Course Card Click Listener (Course/Product interactions only)
+        document.querySelectorAll('[data-track-click], .course-card, .btn-start-project').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Ignore clicks on system navigation, modals, and tracker controls
+                if (el.closest('.navbar') || el.closest('#floating-signal-tracker') || el.closest('#diagnostics-modal')) {
+                    return;
+                }
                 const title = el.getAttribute('data-track-title') || el.innerText.trim();
-                if (title && title.length > 1 && !title.includes('\n') && title !== '➖') {
+                const isSystemBtn = /Agent Flow Diagnostics|MeshAPI Console|Admin|Engine|Logout|Sign in|Reset|🗑️|➖/i.test(title);
+                
+                if (title && title.length > 1 && !title.includes('\n') && !isSystemBtn) {
                     if (el.classList.contains('btn-start-project')) {
                         trackNaturalSignal('CTA', `User clicked call-to-action: Start Project ↗ on "${currentTopicName}"`);
                     } else if (!el.classList.contains('category-pill') && !el.classList.contains('tab-btn')) {
