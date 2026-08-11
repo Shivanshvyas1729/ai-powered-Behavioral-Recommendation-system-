@@ -1,5 +1,5 @@
 # NeuroCart / SmartReco — Behavioral AI Recommendation Agent
-
+live link  -  https://neurocart-smartreco.onrender.com
 **NeuroCart (SmartReco)** is an agentic, hyper-personalized recommendation platform for modern e-commerce and learning marketplaces. Instead of static "related products" widgets or generic rules, NeuroCart features a **real-time 17-signal behavioral AI agent** that continuously observes user browsing activity (views, searches, filters, tech tag clicks, dwell times, scroll depth, text highlights, curriculum expansions), semantically retrieves candidate items via **Vector RAG (ChromaDB)**, and re-ranks courses using **Mesh API LLM (`openai/gpt-4o-mini`)** with **Pydantic structured output validation**.
 
 ---
