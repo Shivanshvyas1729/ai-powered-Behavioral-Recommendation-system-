@@ -57,7 +57,7 @@ def run_tests():
         try:
             # Need to get user_id from token
             user_id = int(session_cookie.split(".")[0])
-            res_rec = client.get(f"/api/agent/live-signal")
+            res_rec = client.get(f"/api/agent/live-signal?force_refresh=true")
             if res_rec.status_code == 200:
                 data = res_rec.json()
                 trace_id = data.get("trace_id")
