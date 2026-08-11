@@ -14,34 +14,34 @@ Organize your Whimsical canvas into 4 visual lanes using standard Whimsical card
 │                                                                                                  │
 │  [User Browses]  ───────►  [Events Tracked]  ───────►  [Retry Logic & Transport]                  │
 │  • Views & Searches         • Queue (Max 6)             • Exponential Backoff                    │
-│  • Dwell Timer              • Flush (3000ms)            • sendBeacon / fetch                     │
+│  • Dwell & Selection        • Flush (3000ms)            • sendBeacon / fetch                     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  LANE 2: EVENT PERSISTENCE & STREAM (Color: Light Green)                                         │
+│  LANE 2: EVENT PERSISTENCE & CONTROL (Color: Light Green)                                        │
 │                                                                                                  │
-│  [Event Storage] ───────►  [Deduplication Engine] ───►  [Live Signal Feed]                       │
-│  • SQLite WAL Mode          • Hash Window (5 sec)       • Action Pills                           │
-│  • behavioral_events        • Unique User Fingerprint   • "Dwell · 12s on Agentic AI"             │
+│  [Event Storage] ───────►  [Admin Trigger Matrix] ───►  [Smart Cooldown & Stream]                │
+│  • SQLite WAL Mode          • System Settings Controls  • Zero-Wait Target Bypass                │
+│  • behavioral_events        • Permitted Event Types     • "Dwell · 12s on Agentic AI"             │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  LANE 3: INTELLIGENCE & VECTOR RAG (Color: Purple)                                               │
+│  LANE 3: INTELLIGENCE & CURRICULUM RAG (Color: Purple)                                          │
 │                                                                                                  │
-│  [Signal Analyzer] ──────►  [Semantic Search]     ───►  [Top-K Filter & Ranker]                   │
-│  • Extract Tokens           • Mesh API Vector Embeds    • Cosine Similarity                      │
-│  • Signal Aggregator        • Catalog Index Search      • Select Top 2-3 Courses                 │
+│  [Signal Analyzer] ──────►  [Vector Store Search] ───►  [Project Curriculum Ranker]              │
+│  • Intent Formula           • Mesh API Vector Embeds    • Exclude Visited Courses                │
+│  • Signal Aggregator        • Cached Embedding Store    • Enrich 4-Module Curriculum Context     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  LANE 4: GENERATIVE & DELIVERY (Color: Peach / Coral)                                            │
 │                                                                                                  │
-│  [LLM Mesh API Engine] ──────►  [Display & Auto-Refresh]                                         │
-│  • openai/gpt-4o-mini           • Floating Signal Widget                                         │
-│  • Persuasive Narrative         • Real-Time Rec Feed Stream                                      │
+│  [LLM Mesh API Engine] ──────►  [Display & SSE Streaming]                                        │
+│  • openai/gpt-4o-mini           • Glowing Cursor Typewriter                                      │
+│  • Persuasive Narrative         • Staggered Card Entrance                                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
