@@ -132,6 +132,26 @@ class SmartRecoAgent:
                 products_catalog=scoped_products
             )
             trace.t_vector_ms = (time.perf_counter() - t0_vector) * 1000
+
+            # --- Filter out already-visited courses ---
+            # Extract course titles the user has explored from their event statements
+            visited_titles = set()
+            for ev in recent_events:
+                stmt = ev.get("target_id", "")
+                # Extract quoted titles from statements like: User opened & currently exploring "Course Title"
+                quoted = re.findall(r'"([^"]+)"', stmt)
+                for q in quoted:
+                    visited_titles.add(q.lower().strip())
+
+            if visited_titles:
+                filtered_candidates = [
+                    p for p in candidate_products
+                    if p["title"].lower().strip() not in visited_titles
+                ]
+                # Only use filtered list if we still have enough candidates
+                if len(filtered_candidates) >= 2:
+                    candidate_products = filtered_candidates
+                    logger.info(f"[Agent] Filtered out {len(visited_titles)} visited courses, {len(candidate_products)} candidates remain")
             
             if not candidate_products:
                 trace.error_vector_db = "Vector store search returned 0 candidate products."
