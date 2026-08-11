@@ -48,6 +48,47 @@ class AgentRecommendationPayload(BaseModel):
 
 TRACE_LOGS = deque(maxlen=5)
 TRACES_LOCK = threading.Lock()
+# Cooldown tracking registry: user_id -> float (timestamp of last LLM call)
+LAST_USER_TRIGGER_TIME: Dict[int, float] = {}
+
+def calculate_intent_score(events: List[Dict[str, Any]]) -> float:
+    """
+    Calculates behavioral Intent Score using production formula:
+    Intent Score = Sum(Event Weight * Dwell Factor)
+    """
+    score = 0.0
+    for ev in events:
+        ev_type = (ev.get("event_type") or "").lower()
+        target = (ev.get("target_id") or "").lower()
+        
+        # Skip generic main catalog / engine peeking from positive scoring
+        if any(k in target for k in ["main course catalog", "peek inside the engine", "course catalog"]):
+            continue
+
+        meta = ev.get("metadata", {})
+        if isinstance(meta, str):
+            try: meta = json.loads(meta)
+            except: meta = {}
+            
+        dwell_sec = meta.get("dwell_sec", 1.0)
+        try: dwell_sec = float(dwell_sec)
+        except: dwell_sec = 1.0
+
+        if "filter" in ev_type or "category" in target:
+            score += 3.0
+        elif "view" in ev_type or "product" in target or "course" in target:
+            dwell_factor = min(dwell_sec / 3.0, 1.0)
+            score += 3.0 * dwell_factor
+        elif "search" in ev_type:
+            score += 2.5
+        elif "dwell" in ev_type:
+            dwell_factor = min(dwell_sec / 5.0, 1.0)
+            score += 1.5 * dwell_factor
+        else:
+            score += 0.2
+
+    return round(score, 2)
+
 
 class SmartRecoAgent:
     """
@@ -90,33 +131,15 @@ class SmartRecoAgent:
                 "recommended_products": []
             }
 
-        # --- Threshold checks for active recommendations ---
+        # --- Calculate Intent Score & Thresholds ---
+        intent_score = calculate_intent_score(recent_events)
         active_category = category_context if (category_context and category_context != "All") else None
 
-        # Filter out generic main catalog/page visits to require true user intent signals
+        # Filter out generic main catalog visits
         meaningful_events = [
             e for e in recent_events
             if not any(k in (e.get("target_id", "") or "").lower() for k in ["main course catalog", "peek inside the engine", "course catalog"])
         ]
-
-        if active_category:
-            scoped_products = [p for p in all_products if p["category"].lower() == active_category.lower()]
-            if not force_refresh and len(meaningful_events) < 1:
-                return {
-                    "active": False,
-                    "narrative": f"Explore {active_category} courses to get personalized AI recommendations.",
-                    "signal_pills": [],
-                    "recommended_products": []
-                }
-        else:
-            if not force_refresh and len(meaningful_events) < 1:
-                return {
-                    "active": False,
-                    "narrative": "Keep exploring specific products or categories to enable live AI agent recommendations.",
-                    "signal_pills": [],
-                    "recommended_products": []
-                }
-            scoped_products = all_products
 
         # Determine primary trigger action
         if recent_events:
@@ -127,6 +150,44 @@ class SmartRecoAgent:
         else:
             trigger_action = "Manual Intent Refresh"
 
+        # Check 60-Second Cooldown
+        now = time.time()
+        last_time = LAST_USER_TRIGGER_TIME.get(self.user_id, 0.0)
+        time_since_last = now - last_time
+
+        if not force_refresh and time_since_last < 60.0 and last_time > 0.0:
+            remaining = int(60.0 - time_since_last)
+            # Log Cooldown Suppression to agent_triggers.log
+            try:
+                with open("agent_triggers.log", "a", encoding="utf-8") as f:
+                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] User #{self.user_id} | ⏸️ SUPPRESSED | Trigger: {trigger_action} | Score: {intent_score} | Reason: COOLDOWN ({remaining}s remaining)\n")
+            except Exception:
+                pass
+            
+            # If within cooldown, skip re-calling LLM unless force_refresh=True
+
+        if active_category:
+            scoped_products = [p for p in all_products if p["category"].lower() == active_category.lower()]
+            if not force_refresh and (intent_score < 1.5 and len(meaningful_events) < 1):
+                return {
+                    "active": False,
+                    "narrative": f"Explore {active_category} courses to get personalized AI recommendations.",
+                    "signal_pills": [],
+                    "recommended_products": []
+                }
+        else:
+            if not force_refresh and (intent_score < 1.5 and len(meaningful_events) < 1):
+                return {
+                    "active": False,
+                    "narrative": "Keep exploring specific products or categories to enable live AI agent recommendations.",
+                    "signal_pills": [],
+                    "recommended_products": []
+                }
+            scoped_products = all_products
+
+        # Record LLM call timestamp for cooldown
+        LAST_USER_TRIGGER_TIME[self.user_id] = now
+
         product_map = {p["id"]: p["title"] for p in all_products}
         signal_pills = self.extract_signal_pills(recent_events, product_map)
 
@@ -136,7 +197,7 @@ class SmartRecoAgent:
             trace_id=str(uuid.uuid4()),
             user_id=self.user_id,
             timestamp=time.time(),
-            trigger_action=trigger_action
+            trigger_action=f"{trigger_action} (Score: {intent_score})"
         )
 
         # Write to temporary log file agent_triggers.log
