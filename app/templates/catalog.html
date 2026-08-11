@@ -163,16 +163,23 @@ function loadCategoryRecommendation(categoryName = 'All') {
 
     currentAbortController = new AbortController();
 
-    // Prepare skeleton structure silently (widget stays hidden until data returns)
+    const textEl  = document.querySelector('#home-typewriter-text');
+    const gridEl  = document.querySelector('#home-recommended-grid');
+    const widgetEl = document.querySelector('#signal-widget-root');
+
+    // Reveal widget IMMEDIATELY (0ms delay) so user sees instant activity & skeleton
+    if (widgetEl) {
+        widgetEl.style.display = 'block';
+        void widgetEl.offsetWidth;
+        widgetEl.style.opacity = '1';
+        widgetEl.style.transform = 'translateY(0)';
+    }
+
     showSkeletonLoader();
 
     const catParam = categoryName && categoryName !== 'All'
         ? '?category=' + encodeURIComponent(categoryName)
         : '';
-
-    const textEl  = document.querySelector('#home-typewriter-text');
-    const gridEl  = document.querySelector('#home-recommended-grid');
-    const widgetEl = document.querySelector('#signal-widget-root');
 
     // ── STREAM 1: Narrative (SSE) — fires first, tokens arrive in ~200ms ────────
     const source = new EventSource('/api/agent/narrative-stream' + catParam);
