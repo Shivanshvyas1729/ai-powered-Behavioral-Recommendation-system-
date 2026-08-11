@@ -13,6 +13,67 @@
         <span class="category-tag" style="background: #10b981; font-size: 0.82rem; padding: 0.4rem 0.9rem;">Dual-Write Active</span>
     </div>
 
+    <!-- Admin Trigger Event Control Matrix Panel -->
+    <div class="form-card" style="max-width: 100%; margin: 0 0 2.5rem 0; background: linear-gradient(135deg, rgba(30,27,75,0.7) 0%, rgba(15,12,30,0.9) 100%); border: 1px solid rgba(139,92,246,0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <div>
+                <h3 style="color: #fff; margin: 0; font-family: var(--font-heading);">⚡ LLM Recommendation Trigger Event Matrix</h3>
+                <p style="color: #94a3b8; font-size: 0.82rem; margin-top: 2px;">Control which user telemetry interactions are allowed to trigger AI Agent recommendations. Turned-off events are logged to telemetry but blocked from executing LLM calls.</p>
+            </div>
+            <span style="background: rgba(139,92,246,0.18); color: #a78bfa; font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid rgba(139,92,246,0.3);">Admin Control Mode</span>
+        </div>
+
+        <form action="/admin/triggers/update" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background: rgba(11,15,25,0.6); padding: 1.25rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Filter" {% if 'Filter' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    🏷️ Category Filters (`Filter`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Viewed" {% if 'Viewed' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    👁️ Course Page Visits (`Viewed`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Searched" {% if 'Searched' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    🔍 Search Queries (`Searched`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Dwell" {% if 'Dwell' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    ⏱️ Section Dwell Time (`Dwell`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="CTA" {% if 'CTA' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    🎯 CTA Buttons (`CTA`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Clicked" {% if 'Clicked' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    ⚡ Tech Stack Pills (`Clicked`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Highlight" {% if 'Highlight' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    🖍️ Text Selection (`Highlight`)
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; color: #fff; font-size: 0.88rem; font-weight: 600;">
+                    <input type="checkbox" name="allowed_triggers" value="Scroll" {% if 'Scroll' in allowed_trigger_events %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                    📜 Deep Scrolling (`Scroll`)
+                </label>
+
+            </div>
+
+            <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.55rem 1.4rem; font-size: 0.85rem;">Save Trigger Matrix Controls</button>
+            </div>
+        </form>
+    </div>
+
     <!-- Add Product Form -->
     <div class="form-card" style="max-width: 100%; margin: 0 0 2.5rem 0;">
         <h3 style="color: #fff; margin-bottom: 1.25rem; font-family: var(--font-heading);">➕ Add New Project / Course (Dual-Write Sync Enabled)</h3>

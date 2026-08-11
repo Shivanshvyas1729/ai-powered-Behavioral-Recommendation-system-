@@ -71,8 +71,26 @@ def init_db():
         cursor.execute("ALTER TABLE products ADD COLUMN instructor_linkedin VARCHAR(255) DEFAULT 'https://linkedin.com'")
     if "technologies" not in columns:
         cursor.execute("ALTER TABLE products ADD COLUMN technologies VARCHAR(255) DEFAULT 'LangGraph, Keycloak, OPA, OpenMetadata, Streamlit'")
+    if "curriculum" not in columns:
+        cursor.execute("ALTER TABLE products ADD COLUMN curriculum TEXT DEFAULT ''")
 
-    # 3. Behavioral Events Table
+    # 3. System Settings Table (Admin Trigger Controls & System Config)
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS system_settings (
+        setting_key VARCHAR(100) PRIMARY KEY,
+        setting_value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # Seed default allowed trigger events if not set
+    default_triggers = json.dumps(["Filter", "Viewed", "Searched", "Dwell", "CTA", "Clicked", "Tech"])
+    cursor.execute(
+        "INSERT OR IGNORE INTO system_settings (setting_key, setting_value) VALUES ('allowed_trigger_events', ?)",
+        (default_triggers,)
+    )
+
+    # 4. Behavioral Events Table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS behavioral_events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,7 +103,7 @@ def init_db():
     )
     ''')
 
-    # 4. Recommendations Table
+    # 5. Recommendations Table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS recommendations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -433,4 +451,105 @@ def get_latest_recommendation(user_id: int) -> Optional[Dict[str, Any]]:
         (user_id,)
     ).fetchone()
     conn.close()
-    return dict(rec) if rec else None
+    if rec:
+        d = dict(rec)
+        d["recommended_product_ids"] = json.loads(d["recommended_product_ids"])
+        return d
+    return None
+
+# System Settings Helpers (Admin Trigger Event Control)
+def get_setting(key: str, default_val: str = "") -> str:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = ?", (key,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else default_val
+
+def set_setting(key: str, val: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO system_settings (setting_key, setting_value) VALUES (?, ?)", (key, val))
+    conn.commit()
+    conn.close()
+
+def get_allowed_trigger_events() -> List[str]:
+    default_allowed = json.dumps(["Filter", "Viewed", "Searched", "Dwell", "CTA", "Clicked", "Tech"])
+    raw = get_setting("allowed_trigger_events", default_allowed)
+    try:
+        return json.loads(raw)
+    except Exception:
+        return ["Filter", "Viewed", "Searched", "Dwell", "CTA", "Clicked", "Tech"]
+
+def set_allowed_trigger_events(events: List[str]):
+    set_setting("allowed_trigger_events", json.dumps(events))
+
+# Dynamic Project-Specific Curriculum Module Generator
+def get_project_curriculum_modules(product: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Generates unique, project-tailored curriculum modules matching the course title and tech stack."""
+    if product.get("curriculum"):
+        try:
+            parsed = json.loads(product["curriculum"])
+            if isinstance(parsed, list) and len(parsed) > 0:
+                return parsed
+        except Exception:
+            pass
+
+    title = product.get("title", "Project")
+    techs = [t.strip() for t in product.get("technologies", "").split(",") if t.strip()]
+    tech_primary = techs[0] if techs else "Core Tech"
+    tech_secondary = techs[1] if len(techs) > 1 else "Architecture"
+    tech_tertiary = techs[2] if len(techs) > 2 else "Production Deployment"
+
+    return [
+        {
+            "module": "MODULE 1",
+            "title": f"Architecture & {tech_primary} Foundations",
+            "lectures": "4 lectures",
+            "lectures_list": [
+                f"Lecture 1.1: Project Setup & {title} Overview",
+                f"Lecture 1.2: Core Architecture & {tech_primary} Environment",
+                f"Lecture 1.3: Data Structures & State Schema Design",
+                f"Lecture 1.4: Production Environment Guardrails"
+            ]
+        },
+        {
+            "module": "MODULE 2",
+            "title": f"Deep Dive: {tech_secondary} & Engine Core",
+            "lectures": "6 lectures",
+            "lectures_list": [
+                f"Lecture 2.1: {tech_secondary} Pipeline Implementation",
+                f"Lecture 2.2: Advanced Routing & Error Resilience",
+                f"Lecture 2.3: {title} Core Business Logic",
+                f"Lecture 2.4: State Persistence & Memory Management",
+                f"Lecture 2.5: Integration Testing & Mock Harnesses",
+                f"Lecture 2.6: Performance Benchmarking & Optimization"
+            ]
+        },
+        {
+            "module": "MODULE 3",
+            "title": f"Security, Policy & {tech_tertiary}",
+            "lectures": "6 lectures",
+            "lectures_list": [
+                f"Lecture 3.1: Security Policy Enforcement & RBAC",
+                f"Lecture 3.2: {tech_tertiary} Integration & Secrets Management",
+                f"Lecture 3.3: Automated Telemetry & Observability Spans",
+                f"Lecture 3.4: Real-time Event Streaming & Webhooks",
+                f"Lecture 3.5: Failover Mechanisms & Rate Limiting",
+                f"Lecture 3.6: Production Compliance Audit"
+            ]
+        },
+        {
+            "module": "MODULE 4",
+            "title": f"Production Project: Capstone {title} Deployment",
+            "lectures": "6 lectures",
+            "lectures_list": [
+                f"Lecture 4.1: Docker Containerization & Microservice Build",
+                f"Lecture 4.2: CI/CD Pipeline on GitHub Actions",
+                f"Lecture 4.3: Cloud Infrastructure Provisioning",
+                f"Lecture 4.4: End-to-End System Testing & Stress Testing",
+                f"Lecture 4.5: Monitoring & Alerting Setup",
+                f"Lecture 4.6: Live Production Deployment & Graduation"
+            ]
+        }
+    ]

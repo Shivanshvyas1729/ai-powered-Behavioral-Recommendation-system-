@@ -269,6 +269,7 @@ async def product_detail_page(product_id: int, request: Request, session_user_id
         
     all_products = get_all_products()
     related_products = [p for p in all_products if p["id"] != product_id][:3]
+    curriculum_modules = get_project_curriculum_modules(product)
 
     # Fast instant HTML render
     resp = render_template(
@@ -277,6 +278,7 @@ async def product_detail_page(product_id: int, request: Request, session_user_id
         context={
             "user": user,
             "product": product,
+            "curriculum_modules": curriculum_modules,
             "related_products": related_products,
             "current_page": "catalog"
         }
@@ -298,11 +300,7 @@ async def recommendations_page(request: Request, session_user_id: Optional[str] 
         name="recommendations.html",
         context={
             "user": user,
-            "recommendation": {
-                "narrative": "Analyzing your browsing, searching, and dwell signals...",
-                "signal_pills": [{"type": "Active", "label": "Live Telemetry Connected"}],
-                "recommended_products": initial_products
-            },
+            "initial_products": initial_products,
             "current_page": "recommendations"
         }
     )
@@ -442,11 +440,31 @@ async def admin_page(request: Request, session_user_id: Optional[str] = Cookie(N
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
     products = get_all_products()
+    allowed_trigger_events = get_allowed_trigger_events()
     return render_template(
         request=request,
         name="admin.html",
-        context={"user": user, "products": products, "current_page": "admin"}
+        context={
+            "user": user, 
+            "products": products, 
+            "allowed_trigger_events": allowed_trigger_events,
+            "current_page": "admin"
+        }
     )
+
+@app.post("/admin/triggers/update")
+async def update_admin_triggers(
+    request: Request,
+    session_user_id: Optional[str] = Cookie(None)
+):
+    user = get_current_user(session_user_id)
+    if not user or user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    form_data = await request.form()
+    allowed = form_data.getlist("allowed_triggers")
+    set_allowed_trigger_events(allowed)
+    return RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.post("/admin/product/add")
 async def admin_add_product(

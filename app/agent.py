@@ -14,7 +14,7 @@ import threading
 from collections import deque
 from app.models.trace import ExecutionTrace
 
-from app.database import get_recent_user_events, get_all_products, save_recommendation, get_latest_recommendation
+from app.database import get_recent_user_events, get_all_products, save_recommendation, get_latest_recommendation, get_allowed_trigger_events
 from app.vector_store import VectorStoreManager
 
 logger = logging.getLogger("smartreco.agent")
@@ -149,8 +149,30 @@ class SmartRecoAgent:
             trigger_action = f"{ev_type}: {ev_target}"
             current_target = str(ev_target).lower()
         else:
+            ev_type = "Filter"
             trigger_action = "Manual Intent Refresh"
             current_target = (active_category or "all").lower()
+
+        # Admin Trigger Control Matrix Check:
+        allowed_triggers = [t.lower().strip() for t in get_allowed_trigger_events()]
+        current_type = ev_type.lower().strip()
+        is_permitted = (
+            current_type in allowed_triggers or
+            (current_type in ["view", "viewed"] and ("view" in allowed_triggers or "viewed" in allowed_triggers)) or
+            (current_type in ["click", "clicked"] and ("click" in allowed_triggers or "clicked" in allowed_triggers))
+        )
+        if not is_permitted and not force_refresh:
+            try:
+                with open("agent_triggers.log", "a", encoding="utf-8") as f:
+                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] User #{self.user_id} | ⏸️ SUPPRESSED | Trigger: {trigger_action} | Reason: TRIGGER_DISABLED_BY_ADMIN ({ev_type} turned off)\n")
+            except Exception:
+                pass
+            return {
+                "active": False,
+                "narrative": f"Recommendation triggers for '{ev_type}' interactions are disabled by Admin.",
+                "signal_pills": [],
+                "recommended_products": []
+            }
 
         # Smart Target-Aware Cooldown:
         # Cooldown ONLY applies if user triggers for the EXACT SAME target within 10s.
