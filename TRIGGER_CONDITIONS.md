@@ -37,7 +37,7 @@ An LLM API call via Mesh API is executed **ONLY** when a user reaches Intent Sco
 | **2** | **Main Catalog Page Dwell** | User scrolls or reads generic catalog section. | Logs `Dwell` telemetry to SQLite; LLM call blocked (`intent_score < 1.5`). |
 | **3** | **Text Highlighting / Hover** | User selects text or hovers elements. | Logged as ambient telemetry signal. |
 | **4** | **Navbar / System UI** | User clicks *Agent Diagnostics*, *MeshAPI Console*, *Admin*, *Logout*. | System UI excluded from tracking in `tracker.js`. |
-| **5** | **60s Cooldown Active** | LLM call requested within 60s of previous call. | Suppressed (`Reason: COOLDOWN`); reuses cached recommendation. |
+| **5** | **Same-Target Rapid Repeat** | Duplicate LLM call requested for the EXACT same course/category within 10s. | Suppressed (`Reason: SAME_TARGET_COOLDOWN`); reuses cached recommendation. |
 
 ---
 
@@ -62,11 +62,11 @@ Where:
 
 ---
 
-## 6. Cooldown & Rate Limiting
+## 6. Smart Target-Aware Cooldown & Rate Limiting
 
-- **LLM Call Cooldown**: 60 seconds per user (prevents API spamming).
-- **Per-User Limit**: Max 10 LLM calls per session.
-- **Strict Manual Override**: `force_refresh=True` bypasses cooldown.
+- **Zero-Wait New Target Bypass**: Opening a **NEW course** or selecting a **NEW category** BYPASSES cooldown INSTANTLY! Fresh AI recommendations generate immediately without any delay.
+- **10s Same-Target Debounce**: Rapid repeated triggers for the *exact same* course/category within 10 seconds are debounced to prevent redundant API calls.
+- **Strict Manual Override**: `force_refresh=True` bypasses all cooldown checks.
 
 ---
 

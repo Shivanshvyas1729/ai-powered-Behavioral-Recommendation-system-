@@ -141,30 +141,33 @@ class SmartRecoAgent:
             if not any(k in (e.get("target_id", "") or "").lower() for k in ["main course catalog", "peek inside the engine", "course catalog"])
         ]
 
-        # Determine primary trigger action
+        # Determine primary trigger action and target
         if recent_events:
             last_ev = recent_events[0]
             ev_type = last_ev.get("event_type", "Intent")
             ev_target = last_ev.get("target_id", "Catalog Exploration")
             trigger_action = f"{ev_type}: {ev_target}"
+            current_target = str(ev_target).lower()
         else:
             trigger_action = "Manual Intent Refresh"
+            current_target = (active_category or "all").lower()
 
-        # Check 60-Second Cooldown
+        # Smart Target-Aware Cooldown:
+        # Cooldown ONLY applies if user triggers for the EXACT SAME target within 10s.
+        # Exploring a NEW course or NEW category BYPASSES cooldown INSTANTLY!
         now = time.time()
-        last_time = LAST_USER_TRIGGER_TIME.get(self.user_id, 0.0)
+        last_time, last_target = LAST_USER_TRIGGER_TIME.get(self.user_id, (0.0, ""))
         time_since_last = now - last_time
+        is_same_target = (last_target == current_target)
 
-        if not force_refresh and time_since_last < 60.0 and last_time > 0.0:
-            remaining = int(60.0 - time_since_last)
+        if not force_refresh and is_same_target and time_since_last < 10.0 and last_time > 0.0:
+            remaining = int(10.0 - time_since_last)
             # Log Cooldown Suppression to agent_triggers.log
             try:
                 with open("agent_triggers.log", "a", encoding="utf-8") as f:
-                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] User #{self.user_id} | ⏸️ SUPPRESSED | Trigger: {trigger_action} | Score: {intent_score} | Reason: COOLDOWN ({remaining}s remaining)\n")
+                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] User #{self.user_id} | ⏸️ SUPPRESSED | Trigger: {trigger_action} | Score: {intent_score} | Reason: SAME_TARGET_COOLDOWN ({remaining}s remaining)\n")
             except Exception:
                 pass
-            
-            # If within cooldown, skip re-calling LLM unless force_refresh=True
 
         if active_category:
             scoped_products = [p for p in all_products if p["category"].lower() == active_category.lower()]
@@ -185,8 +188,8 @@ class SmartRecoAgent:
                 }
             scoped_products = all_products
 
-        # Record LLM call timestamp for cooldown
-        LAST_USER_TRIGGER_TIME[self.user_id] = now
+        # Record LLM call timestamp and target for smart cooldown
+        LAST_USER_TRIGGER_TIME[self.user_id] = (now, current_target)
 
         product_map = {p["id"]: p["title"] for p in all_products}
         signal_pills = self.extract_signal_pills(recent_events, product_map)
