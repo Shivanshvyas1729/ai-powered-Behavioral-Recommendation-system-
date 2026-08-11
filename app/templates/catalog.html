@@ -51,9 +51,9 @@
         </div>
     </div>
 
-    <!-- Narrative / Typewriter Row -->
-    <div id="live-agent-recommendation-text" style="margin:0 0.4rem 0.85rem; padding:0.6rem 0.85rem; background:rgba(139,92,246,0.08); border-left:3px solid #8b5cf6; border-radius:4px; position:relative; max-height:100px; overflow-y:auto;">
-        <span id="home-typewriter-text" style="color:#e2e8f0; font-size:0.84rem; font-style:normal; line-height:1.5;"></span>
+    <!-- Narrative / Typewriter Row (Sleek Glassmorphic Container) -->
+    <div id="live-agent-recommendation-text" style="margin:0 0.4rem 1.1rem; padding:1.1rem 1.3rem; background:linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.06)); border:1px solid rgba(139,92,246,0.25); border-left:4px solid #a78bfa; border-radius:10px; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <div id="home-typewriter-text" style="color:#e2e8f0; font-size:0.95rem; font-style:normal; line-height:1.65; font-family:var(--font-sans);"></div>
     </div>
 
     <!-- Recommended Cards Grid (Sleek Compact Cards) -->
@@ -68,6 +68,20 @@
     50% { opacity: 0.5; transform: scale(0.7); }
 }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.typewriter-cursor {
+    display: inline-block;
+    color: #a78bfa;
+    font-weight: bold;
+    margin-left: 2px;
+    animation: blink 0.8s infinite;
+}
+@keyframes cardEntrance {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.course-card.card-entrance {
+    animation: cardEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 @keyframes shimmer {
     0%   { background-position: -600px 0; }
     100% { background-position:  600px 0; }
@@ -177,6 +191,12 @@ function loadCategoryRecommendation(categoryName = 'All') {
         }
         if (msg.done) {
             source.close(); currentEventSource = null;
+            if (textEl && narrativeText) {
+                const formatted = narrativeText
+                    .replace(/\n\n/g, '<br><br>')
+                    .replace(/"([^"]+)"/g, '<span style="color:#a78bfa;font-weight:600;">"$1"</span>');
+                textEl.innerHTML = formatted; // Clean cursor on finish
+            }
             return;
         }
         if (msg.token) {
@@ -189,7 +209,10 @@ function loadCategoryRecommendation(categoryName = 'All') {
             }
             if (textEl) {
                 narrativeText += msg.token;
-                textEl.innerText = narrativeText;   // raw prose
+                const formatted = narrativeText
+                    .replace(/\n\n/g, '<br><br>')
+                    .replace(/"([^"]+)"/g, '<span style="color:#a78bfa;font-weight:600;">"$1"</span>');
+                textEl.innerHTML = formatted + '<span class="typewriter-cursor">▌</span>';
             }
         }
     };
@@ -224,9 +247,10 @@ function loadCategoryRecommendation(categoryName = 'All') {
             setTimeout(() => {
                 gridEl.innerHTML = '';
                 gridEl.style.opacity = '1';
-                data.recommended_products.slice(0, 3).forEach(p => {
+                data.recommended_products.slice(0, 3).forEach((p, idx) => {
                     const card = document.createElement('div');
-                    card.className = 'course-card';
+                    card.className = 'course-card card-entrance';
+                    card.style.animationDelay = `${idx * 0.1}s`;
                     card.style.border = '1px solid rgba(139, 92, 246, 0.35)';
                     card.innerHTML = `
                         <div class="course-card-banner">

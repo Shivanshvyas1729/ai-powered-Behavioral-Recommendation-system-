@@ -221,29 +221,35 @@ class SmartRecoAgent:
             )
             trace.t_vector_ms = (time.perf_counter() - t0_vector) * 1000
 
-            # --- Filter out already-visited courses ---
-            # Extract course titles the user has explored from their event statements
+            # --- Filter out already-visited courses strictly ---
             visited_titles = set()
             for ev in recent_events:
-                stmt = ev.get("target_id", "")
-                # Extract quoted titles from statements like: User opened & currently exploring "Course Title"
+                stmt = (ev.get("target_id", "") or "") + " " + str(ev.get("metadata", ""))
                 quoted = re.findall(r'"([^"]+)"', stmt)
                 for q in quoted:
                     visited_titles.add(q.lower().strip())
+                for p in all_products:
+                    if p["title"].lower() in stmt.lower():
+                        visited_titles.add(p["title"].lower().strip())
 
-            if visited_titles:
-                filtered_candidates = [
-                    p for p in candidate_products
-                    if p["title"].lower().strip() not in visited_titles
+            # Strictly remove visited courses from candidate pool
+            unvisited_candidates = [
+                p for p in candidate_products
+                if p["title"].lower().strip() not in visited_titles
+            ]
+
+            if len(unvisited_candidates) >= 2:
+                candidate_products = unvisited_candidates
+            else:
+                # If active category has <2 unvisited candidates, pull unvisited courses from full catalog
+                other_unvisited = [
+                    p for p in all_products
+                    if p["title"].lower().strip() not in visited_titles and p["id"] not in [x["id"] for x in unvisited_candidates]
                 ]
-                # Only use filtered list if we still have enough candidates
-                if len(filtered_candidates) >= 2:
-                    candidate_products = filtered_candidates
-                    logger.info(f"[Agent] Filtered out {len(visited_titles)} visited courses, {len(candidate_products)} candidates remain")
-            
+                candidate_products = (unvisited_candidates + other_unvisited)[:10]
+
             if not candidate_products:
-                trace.error_vector_db = "Vector store search returned 0 candidate products."
-                raise Exception(trace.error_vector_db)
+                candidate_products = scoped_products[:3]
 
             # Build Rich Candidate Context for Deep LLM Re-Ranking & Analysis
             candidates_context = "\n".join([
@@ -251,6 +257,7 @@ class SmartRecoAgent:
                 for p in candidate_products
             ])
             behavioral_history = ", ".join([f"{p['type']} · {p['label']}" for p in signal_pills])
+            visited_str = ", ".join([f'"{t}"' for t in visited_titles]) if visited_titles else "None"
 
             narrative = ""
             recommended_products = []
@@ -261,15 +268,17 @@ class SmartRecoAgent:
                 try:
                     client = get_mesh_client()
                     prompt = (
-                        f"User Real-Time Behavioral Telemetry Actions: [{behavioral_history}]\n\n"
+                        f"User Real-Time Behavioral Telemetry Actions: [{behavioral_history}]\n"
+                        f"VISITED COURSES TO STRICTLY EXCLUDE: [{visited_str}]\n\n"
                         f"Candidate Courses:\n{candidates_context}\n\n"
                         f"INSTRUCTION:\n"
-                        f"Select 2 course IDs that best match user interest. Keep narrative and reasons brief (under 30 words per reason).\n\n"
+                        f"Select EXACTLY 2 to 3 course IDs from Candidate Courses that best complement user interest.\n"
+                        f"CRITICAL CONSTRAINT: Do NOT recommend any course title listed under VISITED COURSES! Always select UNVISITED courses.\n\n"
                         f"Format output strictly as JSON object:\n"
                         f"{{\n"
                         f'  "narrative": "Persuasive 1-sentence recommendation summary.",\n'
                         f'  "recommendations": [\n'
-                        f'    {{"id": 1, "reason": "How: Teaches state persistence. Why: Matches your MLOps interest. What: Build Autonomous Agents. Tech: LangGraph, Python."}}\n'
+                        f'    {{"id": 1, "reason": "How: Teaches state persistence. Why: Matches your interest. What: Build Autonomous Agents."}}\n'
                         f'  ]\n'
                         f"}}"
                     )

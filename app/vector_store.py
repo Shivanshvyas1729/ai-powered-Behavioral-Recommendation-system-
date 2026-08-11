@@ -35,11 +35,15 @@ except Exception as err:
 
 # Fallback In-Memory cache for speed
 _VECTOR_STORE: Dict[int, Dict[str, Any]] = {}
+_QUERY_EMBEDDING_CACHE: Dict[str, List[float]] = {}
 
 
 
 def get_embedding(text: str) -> List[float]:
-    """Fetches a single dense vector embedding from Mesh API Gateway."""
+    """Fetches a single dense vector embedding from Mesh API Gateway (with fast in-memory caching)."""
+    if text in _QUERY_EMBEDDING_CACHE:
+        return _QUERY_EMBEDDING_CACHE[text]
+
     if MESH_API_KEY:
         try:
             headers = {
@@ -59,7 +63,9 @@ def get_embedding(text: str) -> List[float]:
             )
             if res.status_code == 200:
                 data = res.json()
-                return data["data"][0]["embedding"]
+                vec = data["data"][0]["embedding"]
+                _QUERY_EMBEDDING_CACHE[text] = vec
+                return vec
             else:
                 logger.error(f"Mesh API Embedding non-200 status {res.status_code}: {res.text}")
                 raise Exception(f"Mesh API returned {res.status_code}")
