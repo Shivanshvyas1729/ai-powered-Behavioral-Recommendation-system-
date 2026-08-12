@@ -1,6 +1,7 @@
 # Environment variables (NEVER commit these)
 .env
 .env.local
+.env.*.local
 
 # Python
 __pycache__/
@@ -14,9 +15,18 @@ ENV/
 env.bak/
 venv.bak/
 .venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
 
 # SQLite & Local Stores (generated at runtime, stored on persistent disk in prod)
 *.db
+*.db-journal
+*.db-shm
+*.db-wal
 *.sqlite3
 chroma_db/
 data/
@@ -30,3 +40,6 @@ smartreco.log
 .idea/
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+
